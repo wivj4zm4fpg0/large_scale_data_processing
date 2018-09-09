@@ -1,8 +1,8 @@
 *
 !src
-!src/*
+!src/*.cpp
 !include
-!include/*
+!include/*.h
 !.gitignore
 !README.md
 !Makefile
