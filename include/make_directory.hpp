@@ -4,8 +4,10 @@
 #include <string>
 #include <iostream>
 #include <experimental/filesystem>
+#include <fstream>
 using namespace::std;
 namespace fs = std::experimental::filesystem;
+
 extern void make_directory(fs::path &input_path, fs::path &output_path);
 
 #endif
