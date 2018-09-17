@@ -1,6 +1,7 @@
 *
 !src
 !src/*.cpp
+!src/*.py
 !include
 !include/*.hpp
 !.gitignore

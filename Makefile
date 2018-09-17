@@ -1,5 +1,5 @@
-canny: src/canny_script.cpp src/make_directory.cpp include/make_directory.h
-	g++-7 src/canny_script.cpp src/make_directory.cpp `pkg-config --cflags opencv` `pkg-config --libs opencv` -o bin/canny_script -lstdc++fs
+canny: src/canny.cpp
+	g++-7 src/canny.cpp `pkg-config --cflags opencv` `pkg-config --libs opencv` -o bin/canny
 
 resize: src/resize.cpp src/make_directory.cpp include/make_directory.h
 	g++-7 src/resize.cpp src/make_directory.cpp -o bin/image_resize -lstdc++fs
