@@ -20,9 +20,6 @@ def parser():
     parser.add_argument(
         '--flow_type', default=0, type=int, help='flow type id'
     )
-    parser.add_argument(
-        '--log_path', default='log.txt', type=str, help='log file path'
-    )
     return parser.parse_args()
 
 
@@ -35,7 +32,6 @@ class Extract_videos():
         self.flow_x_paths = []
         self.flow_y_paths = []
         self.count = 1
-        # self.log = open(args.log_path, 'a')
 
     def make_directory(self):
         input_path = self.args.input_path
@@ -50,7 +46,7 @@ class Extract_videos():
                                            video_name)
                 flow_y_path = os.path.join(output_path, 'flow', self.flow[self.args.flow_type], 'flow_y', class_dir,
                                            video_name)
-                if os.path.isfile(os.path.join(flow_x_path, 'image_00001.jpg')):
+                if not os.path.isfile(os.path.join(flow_x_path, 'image_00001.jpg')):
                     os.makedirs(image_path, exist_ok=True)
                     os.makedirs(flow_x_path, exist_ok=True)
                     os.makedirs(flow_y_path, exist_ok=True)
@@ -62,22 +58,19 @@ class Extract_videos():
 
     def process(self, input_video_path, images_path, flow_x_path, flow_y_path):
         file_name = '/image'
+        # input_video_path = re.sub(r'([()&])', r'\\\1', input_video_path)
         os.system(
-            'extract_gpu -f={} -i={} -x={} -y={} -n={} -t={} -o=dir'.format(input_video_path, images_path + file_name,
-                                                                            flow_x_path + file_name,
-                                                                            flow_y_path + file_name,
+            'extract_gpu -f={} -i={} -x={} -y={} -n={} -t={} -o=dir'.format('"' + input_video_path + '"',
+                                                                            '"' + images_path + file_name + '"',
+                                                                            '"' + flow_x_path + file_name + '"',
+                                                                            '"' + flow_y_path + file_name + '"',
                                                                             self.args.image_frag, self.args.flow_type))
-        # log_str = '{} {}'.format(self.count, input_video_path)
-        # print(log_str)
-        # self.log.write(log_str + '\n')
-        # self.count = self.count + 1
         print(input_video_path)
 
     def large_data_processing(self):
         Parallel(n_jobs=-1)(
             [delayed(self.process)(self.input_video_paths[i], self.images_paths[i], self.flow_x_paths[i],
                                    self.flow_y_paths[i]) for i in range(len(self.input_video_paths))])
-        # self.log.close()
 
 
 if __name__ == '__main__':

@@ -19,6 +19,9 @@ gausenoise: src/gausenoise.cpp src/base.cpp include/base.hpp
 salt_pepper: src/salt_pepper.cpp src/base.cpp include/base.hpp
 	g++-7 src/salt_pepper.cpp src/base.cpp  `pkg-config --cflags opencv` `pkg-config --libs opencv` -o bin/salt_pepper -lstdc++fs
 
+imshow: src/imshow.cpp
+	g++-7 src/imshow.cpp `pkg-config --cflags opencv` `pkg-config --libs opencv` -o bin/imshow -lstdc++fs
+
 link:
 	ln -sf $(PWD)/bin/* ~/bin
 
