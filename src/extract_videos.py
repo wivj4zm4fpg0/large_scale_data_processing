@@ -58,12 +58,15 @@ class Extract_videos():
 
     def process(self, input_video_path, images_path, flow_x_path, flow_y_path):
         file_name = '/image'
-        # input_video_path = re.sub(r'([()&])', r'\\\1', input_video_path)
+        input_video_path = re.sub(r'([()&;])', r'\\\1', input_video_path)
+        images_path = re.sub(r'([()&;])', r'\\\1', images_path)
+        flow_x_path = re.sub(r'([()&;])', r'\\\1', flow_x_path)
+        flow_y_path = re.sub(r'([()&;])', r'\\\1', flow_y_path)
         os.system(
-            'extract_gpu -f={} -i={} -x={} -y={} -n={} -t={} -o=dir'.format('"' + input_video_path + '"',
-                                                                            '"' + images_path + file_name + '"',
-                                                                            '"' + flow_x_path + file_name + '"',
-                                                                            '"' + flow_y_path + file_name + '"',
+            'extract_gpu -f={} -i={} -x={} -y={} -n={} -t={} -o=dir'.format(input_video_path,
+                                                                            images_path + file_name,
+                                                                            flow_x_path + file_name,
+                                                                            flow_y_path + file_name,
                                                                             self.args.image_frag, self.args.flow_type))
         print(input_video_path)
 
