@@ -6,18 +6,21 @@
 #include <iostream>
 #include <experimental/filesystem>
 #include <fstream>
-using namespace::std;
+
+using namespace ::std;
 namespace fs = std::experimental::filesystem;
 
 class Base {
 private:
-  char** argv;
+    char **argv;
 public:
-  void make_directory(fs::path &input_path, fs::path &output_path);
-  virtual void processing(string &input_path, string &output_path) = 0;
-  void large_scale_data_processing();
+    void make_directory(fs::path &input_path, fs::path &output_path);
 
-  Base(char** argv);
+    virtual void processing(string &input_path, string &output_path) = 0;
+
+    void large_scale_data_processing();
+
+    explicit Base(char **argv);
 };
 
 #endif
