@@ -20,6 +20,9 @@ def parser():
     parser.add_argument(
         '--flow_type', default=0, type=int, help='flow type id'
     )
+    parser.add_argument(
+        '--fps', default=1, type=int, help='frame rate'
+    )
     return parser.parse_args()
 
 
@@ -58,16 +61,18 @@ class Extract_videos():
 
     def process(self, input_video_path, images_path, flow_x_path, flow_y_path):
         file_name = '/image'
-        input_video_path = re.sub(r'([()&;])', r'\\\1', input_video_path)
-        images_path = re.sub(r'([()&;])', r'\\\1', images_path)
-        flow_x_path = re.sub(r'([()&;])', r'\\\1', flow_x_path)
-        flow_y_path = re.sub(r'([()&;])', r'\\\1', flow_y_path)
+        regex = r'([()&;])'
+        regex_later = r'\\\1'
+        input_video_path = re.sub(regex, regex_later, input_video_path)
+        images_path = re.sub(regex, regex_later, images_path)
+        flow_x_path = re.sub(regex, regex_later, flow_x_path)
+        flow_y_path = re.sub(regex, regex_later, flow_y_path)
         os.system(
-            'extract_gpu -f={} -i={} -x={} -y={} -n={} -t={} -o=dir'.format(input_video_path,
+            'extract_gpu -f={} -i={} -x={} -y={} -n={} -t={} -o=dir -s={}'.format(input_video_path,
                                                                             images_path + file_name,
                                                                             flow_x_path + file_name,
                                                                             flow_y_path + file_name,
-                                                                            self.args.image_frag, self.args.flow_type))
+                                                                            self.args.image_frag, self.args.flow_type, self.args.fps))
         print(input_video_path)
 
     def large_data_processing(self):
