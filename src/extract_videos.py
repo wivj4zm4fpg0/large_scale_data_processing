@@ -7,26 +7,43 @@ from joblib import Parallel, delayed
 
 
 def parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        'input_path', default=None, type=str, help='input path'
+    arg_parse = argparse.ArgumentParser()
+    arg_parse.add_argument(
+        'input_path', default=None, type=str,
+        help='input path'
     )
-    parser.add_argument(
-        'output_path', default=None, type=str, help='output path'
+    arg_parse.add_argument(
+        'output_path', default=None, type=str,
+        help='output path'
     )
-    parser.add_argument(
-        '--image_frag', default=0, type=int, help='create image flag'
+    arg_parse.add_argument(
+        '-fn', '--frame_number', default=None, type=float,
+        help='frame number you want to split'
     )
-    parser.add_argument(
-        '--flow_type', default=0, type=int, help='flow type id'
+    arg_parse.add_argument(
+        '-nci', '--no_create_image', action='store_true',
+        help='create image flag.'
     )
-    parser.add_argument(
-        '--fps', default=1, type=int, help='frame rate'
+    arg_parse.set_defaults(no_create_image=False)
+    arg_parse.add_argument(
+        '-ft', '--flow_type', default=0, type=int, choices=[0, 1, 2],
+        help='flow type id. 0: farnback, 1: tvl1, 2: brox'
     )
-    return parser.parse_args()
+    arg_parse.add_argument(
+        '-f', '--fps', default=1, type=int,
+        help='frame rate'
+    )
+    arg_parse.add_argument(
+        '-pn', '--parallel_number', default=-1, type=int,
+        help='parallel process number'
+    )
+    arg_parse.add_argument(
+        '-t', '--timeout_number', default=60, type=int
+    )
+    return arg_parse.parse_args()
 
 
-class Extract_videos():
+class ExtractVideos:
     def __init__(self, args):
         self.args = args
         self.flow = {0: 'farn', 1: 'tvl1', 2: 'brox'}
@@ -45,10 +62,22 @@ class Extract_videos():
                 video_path = os.path.join(input_path, class_dir, video)
                 video_name = re.sub(r'\.(avi|mkv|mp4|webm)', '', video)
                 image_path = os.path.join(output_path, 'images', class_dir, video_name)
-                flow_x_path = os.path.join(output_path, 'flow', self.flow[self.args.flow_type], 'flow_x', class_dir,
-                                           video_name)
-                flow_y_path = os.path.join(output_path, 'flow', self.flow[self.args.flow_type], 'flow_y', class_dir,
-                                           video_name)
+                flow_x_path = os.path.join(
+                    output_path,
+                    'flow',
+                    self.flow[self.args.flow_type],
+                    'flow_x',
+                    class_dir,
+                    video_name
+                )
+                flow_y_path = os.path.join(
+                    output_path,
+                    'flow',
+                    self.flow[self.args.flow_type],
+                    'flow_y',
+                    class_dir,
+                    video_name
+                )
                 if not os.path.isfile(os.path.join(flow_x_path, 'image_00001.jpg')):
                     os.makedirs(image_path, exist_ok=True)
                     os.makedirs(flow_x_path, exist_ok=True)
@@ -67,22 +96,48 @@ class Extract_videos():
         images_path = re.sub(regex, regex_later, images_path)
         flow_x_path = re.sub(regex, regex_later, flow_x_path)
         flow_y_path = re.sub(regex, regex_later, flow_y_path)
+
+        if self.args.no_create_image:
+            create_image_flag = 1
+        else:
+            create_image_flag = 0
+
+        if self.args.frame_number:
+            video_fps = os.popen('ffprobe -v error -select_streams v:0 -show_entries stream=r_frame_rate -of '
+                                 'csv=s=x:p=0 {}'.format(input_video_path)).read().split('/')
+            duration = os.popen(
+                'ffprobe -v error -select_streams v:0 -show_entries format=duration -of csv=s=x:p=0 {}'.format(
+                    input_video_path
+                )
+            ).read()
+            fps = float(video_fps[0]) / float(video_fps[1]) * float(duration) / self.args.frame_number
+        else:
+            fps = self.args.fps
+
+        print('processing {}'.format(''.join(input_video_path.split('/')[-1:])))
         os.system(
-            'extract_gpu -f={} -i={} -x={} -y={} -n={} -t={} -o=dir -s={}'.format(input_video_path,
-                                                                            images_path + file_name,
-                                                                            flow_x_path + file_name,
-                                                                            flow_y_path + file_name,
-                                                                            self.args.image_frag, self.args.flow_type, self.args.fps))
-        print(input_video_path)
+            'extract_gpu -f={} -i={} -x={} -y={} -n={} -t={} -o=dir -s={}'.format(
+                input_video_path,
+                images_path + file_name,
+                flow_x_path + file_name,
+                flow_y_path + file_name,
+                create_image_flag,
+                self.args.flow_type, fps))
 
     def large_data_processing(self):
-        Parallel(n_jobs=-1)(
-            [delayed(self.process)(self.input_video_paths[i], self.images_paths[i], self.flow_x_paths[i],
-                                   self.flow_y_paths[i]) for i in range(len(self.input_video_paths))])
+        Parallel(
+            n_jobs=self.args.parallel_number,
+            timeout=self.args.timeout_number
+        )([delayed(self.process)(
+            self.input_video_paths[i],
+            self.images_paths[i],
+            self.flow_x_paths[i],
+            self.flow_y_paths[i]
+        ) for i in range(len(self.input_video_paths))])
 
 
 if __name__ == '__main__':
-    extract_videos = Extract_videos(parser())
+    extract_videos = ExtractVideos(parser())
     extract_videos.make_directory()
     start_time = time.time()
     extract_videos.large_data_processing()
