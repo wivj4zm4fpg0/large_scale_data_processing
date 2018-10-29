@@ -37,9 +37,6 @@ def parser():
         '-pn', '--parallel_number', default=-1, type=int,
         help='parallel process number'
     )
-    arg_parse.add_argument(
-        '-t', '--timeout_number', default=60, type=int
-    )
     return arg_parse.parse_args()
 
 
@@ -111,6 +108,8 @@ class ExtractVideos:
                 )
             ).read()
             fps = float(video_fps[0]) / float(video_fps[1]) * float(duration) / self.args.frame_number
+            if fps < 1:
+                fps = 1
         else:
             fps = self.args.fps
 
@@ -127,7 +126,6 @@ class ExtractVideos:
     def large_data_processing(self):
         Parallel(
             n_jobs=self.args.parallel_number,
-            timeout=self.args.timeout_number
         )([delayed(self.process)(
             self.input_video_paths[i],
             self.images_paths[i],
